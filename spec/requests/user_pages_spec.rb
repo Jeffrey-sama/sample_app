@@ -34,7 +34,8 @@ describe "User pages" do
       it { should_not have_link('delete') }
 
       describe "as an admin user" do
-        let(:admin) { FactoryGirl.create(:admin) }
+        let(:admin)  { FactoryGirl.create(:admin) }
+
         before do
           sign_in admin
           visit users_path
@@ -44,7 +45,11 @@ describe "User pages" do
         it "should be able to delete another user" do
           expect { click_link('delete') }.to change(User, :count).by(-1)
         end
-        it { should_not have_link('delete', href: user_path(admin)) }
+
+        it { should_not have_link('delete', href: user_path(admin))  }
+        it "should not be able to delete an admin to delete themselves" do
+          expect { delete user_path(admin) }.not_to change(User, :count)
+        end
       end
     end
   end
@@ -85,10 +90,10 @@ describe "User pages" do
 
     describe "with valid information" do
       before do
-        fill_in "Name",         with: "Jeffrey Cheung"
-        fill_in "Email",        with: "jeffrey_cheung8@hotmail.com"
-        fill_in "Password",     with: "123456"
-        fill_in "Confirmation", with: "123456"
+        fill_in "Name",             with: "Test User"
+        fill_in "Email",            with: "test@test.com"
+        fill_in "Password",         with: "123456"
+        fill_in "Confirm Password", with: "123456"
       end
 
       it "should create a user" do
@@ -97,7 +102,7 @@ describe "User pages" do
 
       describe "after saving the user" do
         before { click_button submit }
-        let(:user) { User.find_by_email('jeffrey_cheung8@hotmail.com') }
+        let(:user) { User.find_by_email('test@test.com') }
 
         it { should have_selector('title', text: user.name) }
         it { should have_selector('div.alert.alert-success', text: 'Welcome') }
