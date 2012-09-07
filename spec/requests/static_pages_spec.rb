@@ -19,6 +19,7 @@ describe "Static pages" do
 
     describe "for signed-in users" do
       let(:user) { FactoryGirl.create(:user) }
+      let(:other_user) { FactoryGirl.create(:user) }
       before do
         FactoryGirl.create(:micropost, user: user, content: "Lorem ipsum")
         FactoryGirl.create(:micropost, user: user, content: "Dolor sit amet")
@@ -29,6 +30,31 @@ describe "Static pages" do
       it "should render the user's feed" do
         user.feed.each do |item|
           page.should have_selector("li##{item.id}", text: item.content)
+        end
+      end
+
+      it "should pluralize the number of microposts in the sidebar correctly" do
+        page.should have_selector("span", text: "2 microposts")
+        click_link "delete"
+        page.should have_selector("span", text: "1 micropost")
+        click_link "delete"
+        page.should have_selector("span", text: "0 micropost")
+      end
+
+      it "should not have delete link for microposts not created by current user" do
+        page.should_not have_link('delete', href: micropost_path(FactoryGirl.create(:micropost, user: other_user)))
+      end
+
+      describe "pagination" do
+        before(:all) { 30.times { FactoryGirl.create(:micropost, user: user) } }
+        after(:all)  { Micropost.delete_all }
+        
+        it { should have_selector("div.pagination") }
+
+        it "should list each micropost" do
+          Micropost.paginate(page: 1).each do |micropost|
+            page.should have_selector("span.content", text: micropost.content)
+          end
         end
       end
     end
